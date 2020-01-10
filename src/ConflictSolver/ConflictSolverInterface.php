@@ -34,8 +34,10 @@
 
 namespace Skyline\Notification\ConflictSolver;
 
+use Skyline\Notification\Entry\NotificationEntryInterface;
+
 /**
- * Conflicts occur if an entry has multiple affected elements with the same name.
+ * Conflicts occur if an entry that needs to be delivered has other entries with common tags.
  * Then the notification service needs an information, which entry it should deliver.
  *
  * @package Skyline\Notification\ConflictSolver
@@ -46,8 +48,8 @@ interface ConflictSolverInterface
      * This method gets called if there are entries with more than one affected elements common.
      * It must decide which Entry should be delivered to the client
      *
-     * @param Entry[] $conflictingEntries
-     * @return Entry
+     * @param NotificationEntryInterface[] $conflictingEntries
+     * @return NotificationEntryInterface
      */
-    public function getSolvedNotificationEntry(array $conflictingEntries): Entry;
+    public function getSolvedNotificationEntry(array $conflictingEntries): NotificationEntryInterface;
 }

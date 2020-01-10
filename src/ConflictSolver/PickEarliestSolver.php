@@ -35,14 +35,16 @@
 namespace Skyline\Notification\ConflictSolver;
 
 
+use Skyline\Notification\Entry\NotificationEntryInterface;
+
 class PickEarliestSolver implements ConflictSolverInterface
 {
-    public function getSolvedNotificationEntry(array $conflictingEntries): Entry
+    public function getSolvedNotificationEntry(array $conflictingEntries): NotificationEntryInterface
     {
-       /** @var Entry $youngest */
+       /** @var NotificationEntryInterface $youngest */
         $youngest = array_shift($conflictingEntries);
 
-        /** @var Entry $entry */
+        /** @var NotificationEntryInterface $entry */
         foreach($conflictingEntries as $entry) {
             if($entry->getUpdated()->getTimestamp() < $youngest->getUpdated()->getTimestamp())
                 $youngest = $entry;
