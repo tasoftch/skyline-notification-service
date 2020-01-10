@@ -35,6 +35,9 @@
 namespace Skyline\Notification\Delivery;
 
 
+use Skyline\Notification\Entry\NotificationDeliverableEntryInterface;
+use Skyline\Notification\Entry\NotificationEntryInterface;
+
 class CallbackDelivery implements DeliveryInterface
 {
     /** @var string */
@@ -59,12 +62,12 @@ class CallbackDelivery implements DeliveryInterface
         return $this->name;
     }
 
-    public function canDeliverNotification(DeliverInfo $notificationInfo): bool
+    public function canDeliverNotification(NotificationEntryInterface $notificationInfo): bool
     {
         return true;
     }
 
-    public function deliverNotification(DeliverInfo $notificationInfo)
+    public function deliverNotification(NotificationDeliverableEntryInterface $notificationInfo)
     {
         return call_user_func($this->getCallback(), $notificationInfo);
     }
