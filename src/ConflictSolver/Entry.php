@@ -35,43 +35,37 @@
 namespace Skyline\Notification\ConflictSolver;
 
 
-use Skyline\Notification\Element\AffectedElementInterface;
-use Skyline\Notification\Kind\NotificationKind;
-use TASoft\Util\AbstractRecordPDOResource;
+use DateTime;
+use Skyline\Notification\Domain\Domain;
+use TASoft\Util\AbstractPDOResource;
 
-class Entry extends AbstractRecordPDOResource
+class Entry extends AbstractPDOResource
 {
-    /** @var NotificationKind */
-    private $kind;
+    /** @var Domain */
+    private $domain;
     /** @var string */
     private $message;
-    /** @var \DateTime */
+    /** @var DateTime */
     private $updated;
-    /** @var AffectedElementInterface[] */
-    private $affectedElements;
+    /** @var string[] */
+    private $tags;
 
     /**
      * Entry constructor.
-     * @param NotificationKind $kind
+     * @param Domain $domain
      * @param string $message
-     * @param \DateTime $updated
-     * @param AffectedElementInterface[] $affectedElements
+     * @param DateTime $updated
+     * @param string[] $tags
+     * @param int $id
      */
-    public function __construct(NotificationKind $kind, string $message, \DateTime $updated, array $affectedElements)
+    public function __construct(Domain $domain, string $message, DateTime $updated, array $tags, int $id = -1)
     {
-        $this->kind = $kind;
+        parent::__construct($id);
+
+        $this->domain = $domain;
         $this->message = $message;
         $this->updated = $updated;
-        $this->affectedElements = $affectedElements;
-    }
-
-
-    /**
-     * @return NotificationKind
-     */
-    public function getKind(): NotificationKind
-    {
-        return $this->kind;
+        $this->tags = $tags;
     }
 
     /**
@@ -83,18 +77,18 @@ class Entry extends AbstractRecordPDOResource
     }
 
     /**
-     * @return \DateTime
+     * @return DateTime
      */
-    public function getUpdated(): \DateTime
+    public function getUpdated(): DateTime
     {
         return $this->updated;
     }
 
     /**
-     * @return AffectedElementInterface[]
+     * @return Domain
      */
-    public function getAffectedElements(): array
+    public function getDomain(): Domain
     {
-        return $this->affectedElements;
+        return $this->domain;
     }
 }
