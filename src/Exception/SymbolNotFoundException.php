@@ -35,23 +35,24 @@
 namespace Skyline\Notification\Exception;
 
 
-class MissingDeliveryException extends NotificationServiceException
+class SymbolNotFoundException extends NotificationServiceException
 {
-    private $delivery;
+    /** @var mixed */
+    private $symbol;
 
     /**
      * @return mixed
      */
-    public function getDelivery()
+    public function getSymbol()
     {
-        return $this->delivery;
+        return $this->symbol;
     }
 
     /**
-     * @param mixed $delivery
+     * @param mixed $symbol
      */
-    public function setDelivery($delivery): void
+    public function setSymbol($symbol): void
     {
-        $this->delivery = $delivery;
+        $this->symbol = $symbol;
     }
 }

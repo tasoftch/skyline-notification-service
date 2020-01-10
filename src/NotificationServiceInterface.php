@@ -36,6 +36,8 @@ namespace Skyline\Notification;
 
 
 use Skyline\Notification\Delivery\DeliveryInterface;
+use Skyline\Notification\Exception\DeliveryInstanceNotFoundException;
+use Skyline\Notification\Exception\DomainNotFoundException;
 use Skyline\Notification\Exception\MissingDeliveryException;
 use Skyline\Notification\Exception\MissingKindException;
 use Skyline\Notification\Domain\Domain;
@@ -44,7 +46,7 @@ use TASoft\Service\ServiceInterface;
 interface NotificationServiceInterface extends ServiceInterface
 {
     /**
-     * Gets a notification kind from persistent storage
+     * Gets a notification domain from persistent storage
      *
      * @param $nameOrID
      * @return Domain|null
@@ -67,23 +69,23 @@ interface NotificationServiceInterface extends ServiceInterface
      * @param DeliveryInterface|string $delivery
      * @param int $options
      * @return void
-     *@throws MissingKindException
-     * @throws MissingDeliveryException
+     * @throws DomainNotFoundException
+     * @throws DeliveryInstanceNotFoundException
      */
     public function register(int $user, array $domains, $delivery, int $options = 0);
 
     /**
-     * Unregisters a user. If $kinds is NULL, unregister all.
-     * Please note: unregistering kinds will not unregister the user, if the last kind was removed!
+     * Unregisters a user. If $domains is NULL, unregister all.
+     * Please note: unregistering domains will not unregister the user, if the last kind was removed!
      * Setting $remainPendent to true won't drop pendent notifications. This can be used to change a user's kind list.
      *
      * @param int $user
-     * @param NotificationKind[]|NULL $kinds
+     * @param Domain[]|NULL $domains
      * @param bool $remainPendent
-     * @throws MissingKindException
+     * @throws DomainNotFoundException
      * @return void
      */
-    public function unregister(int $user, array $kinds = NULL, bool $remainPendent = false);
+    public function unregister(int $user, array $domains = NULL, bool $remainPendent = false);
 
     /**
      * Posts a notification to the storage.
@@ -91,11 +93,11 @@ interface NotificationServiceInterface extends ServiceInterface
      * Depending how deliver modes work they can schedule or handle the notifications.
      *
      * @param $message
-     * @param NotificationKind|string|int $kind
-     * @param array $affectedElements
+     * @param Domain|string|int $domain
+     * @param string[] $tags
      * @return bool|int     Returns to how many users the notification is delivered or false on failure
      */
-    public function postNotification($message, $kind, array $affectedElements = []);
+    public function postNotification($message, $domain, array $tags = []);
 
     /**
      * Call this method to look for pendent notifications and deliver them if needed.

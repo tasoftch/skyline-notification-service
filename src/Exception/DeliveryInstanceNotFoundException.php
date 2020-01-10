@@ -34,23 +34,7 @@
 
 namespace Skyline\Notification\Exception;
 
-class MissingKindException extends NotificationServiceException
+
+class DeliveryInstanceNotFoundException extends SymbolNotFoundException
 {
-    private $kind;
-
-    /**
-     * @return mixed
-     */
-    public function getKind()
-    {
-        return $this->kind;
-    }
-
-    /**
-     * @param mixed $kind
-     */
-    public function setKind($kind): void
-    {
-        $this->kind = $kind;
-    }
 }
