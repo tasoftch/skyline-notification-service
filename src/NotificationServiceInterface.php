@@ -38,8 +38,6 @@ namespace Skyline\Notification;
 use Skyline\Notification\Delivery\DeliveryInterface;
 use Skyline\Notification\Exception\DeliveryInstanceNotFoundException;
 use Skyline\Notification\Exception\DomainNotFoundException;
-use Skyline\Notification\Exception\MissingDeliveryException;
-use Skyline\Notification\Exception\MissingKindException;
 use Skyline\Notification\Domain\Domain;
 use TASoft\Service\ServiceInterface;
 
@@ -75,17 +73,25 @@ interface NotificationServiceInterface extends ServiceInterface
     public function register(int $user, array $domains, $delivery, int $options = 0);
 
     /**
-     * Unregisters a user. If $domains is NULL, unregister all.
-     * Please note: unregistering domains will not unregister the user, if the last kind was removed!
-     * Setting $remainPendent to true won't drop pendent notifications. This can be used to change a user's kind list.
+     * Unregisters a user.
+     *
+     * This method removes every pendent entry as well.
+     * @param int $user
+     * @throws DomainNotFoundException
+     */
+    public function unregister(int $user);
+
+    /**
+     * Modifies a user registration.
+     *
+     * Passing NULL to domains or options does not change the property.
      *
      * @param int $user
-     * @param Domain[]|NULL $domains
-     * @param bool $remainPendent
+     * @param array|NULL $domains
+     * @param int|NULL $options
      * @throws DomainNotFoundException
-     * @return void
      */
-    public function unregister(int $user, array $domains = NULL, bool $remainPendent = false);
+    public function modify(int $user, array $domains = NULL, int $options = NULL);
 
     /**
      * Posts a notification to the storage.
