@@ -32,49 +32,83 @@
  *
  */
 
-namespace Skyline\Notification\Element;
+namespace Skyline\Notification\Delivery;
 
 
-use TASoft\Util\PDOResourceInterface;
+use Skyline\Notification\Element\AffectedElementInterface;
+use Skyline\Notification\Kind\NotificationKind;
 
-/**
- * The affected element class can be used to add recognize stuff to an entry.
- * Each entry may have one or more affected elements.
- * All elements must have unique names for the same entry.
- * So you can check, if an affected element is already set on an entry.
- *
- * Example:
- * Your app sells softwares. A new release gets published and all clients should be informed.
- * The entry has the information, what did happen.
- * User A adjusted the notification service to get informed immediately, so the app sends a mail to him.
- * User B want to be informed on Thursday and Monday at 4:00pm.
- * In the User B's case, the notification service schedules the information at the next desired date to be delivered.
- * But the next day, you publish a new release again. So the old one is no longer relevant for User B (Don't send two mails with redundant information)
- * Now an affected element holds the software name, so you are able to find all entries affecting the software
- *
- * @package Skyline\Notification\Element
- */
-interface AffectedElementInterface extends PDOResourceInterface
+class DeliverInfo
 {
+    /** @var string */
+    private $message;
+
+    /** @var NotificationKind */
+    private $kind;
+
+    /** @var null|AffectedElementInterface[] */
+    private $affectedElements;
+
+    /** @var int */
+    private $user;
+
+    /** @var int */
+    private $userOptions;
+
     /**
-     * Gets the identification name of the element.
-     * Must be unique for all elements of the same entry
-     *
+     * DeliverInfo constructor.
+     * @param string $message
+     * @param NotificationKind $kind
+     * @param int $user
+     * @param int $userOptions
+     * @param AffectedElementInterface[]|null $affectedElements
+     */
+    public function __construct(string $message, NotificationKind $kind, int $user, int $userOptions = 0, array $affectedElements = NULL)
+    {
+        $this->message = $message;
+        $this->kind = $kind;
+        $this->affectedElements = $affectedElements;
+        $this->user = $user;
+        $this->userOptions = $userOptions;
+    }
+
+    /**
      * @return string
      */
-    public function getName(): string;
+    public function getMessage(): string
+    {
+        return $this->message;
+    }
 
     /**
-     * A description for the element
-     *
-     * @return string|null
+     * @return NotificationKind
      */
-    public function getDescription(): ?string;
+    public function getKind(): NotificationKind
+    {
+        return $this->kind;
+    }
 
     /**
-     * Custom options
-     *
+     * @return AffectedElementInterface[]|null
+     */
+    public function getAffectedElements(): ?array
+    {
+        return $this->affectedElements;
+    }
+
+    /**
      * @return int
      */
-    public function getOptions(): int;
+    public function getUser(): int
+    {
+        return $this->user;
+    }
+
+    /**
+     * @return int
+     */
+    public function getUserOptions(): int
+    {
+        return $this->userOptions;
+    }
 }

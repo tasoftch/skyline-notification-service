@@ -35,10 +35,10 @@
 namespace Skyline\Notification;
 
 
-use Skyline\Notification\Deliver\DeliverInterface;
+use Skyline\Notification\Delivery\DeliveryInterface;
 use Skyline\Notification\Exception\MissingDeliveryException;
 use Skyline\Notification\Exception\MissingKindException;
-use Skyline\Notification\Kind\NotificationKind;
+use Skyline\Notification\Domain\Domain;
 use TASoft\Service\ServiceInterface;
 
 interface NotificationServiceInterface extends ServiceInterface
@@ -47,30 +47,30 @@ interface NotificationServiceInterface extends ServiceInterface
      * Gets a notification kind from persistent storage
      *
      * @param $nameOrID
-     * @return NotificationKind|null
+     * @return Domain|null
      */
-    public function getKind($nameOrID): ?NotificationKind;
+    public function getDomain($nameOrID): ?Domain;
 
     /**
      * Gets the designated delivery instance for a name.
      *
      * @param $name
-     * @return DeliverInterface|null
+     * @return DeliveryInterface|null
      */
-    public function getDeliveryInstance(string $name): ?DeliverInterface;
+    public function getDeliveryInstance(string $name): ?DeliveryInterface;
 
     /**
      * Registers a user to get notified
      *
      * @param int $user
-     * @param NotificationKind[]|string[]|int[] $kinds
-     * @param DeliverInterface|string $delivery
+     * @param Domain[]|string[]|int[] $domains
+     * @param DeliveryInterface|string $delivery
      * @param int $options
-     * @throws MissingDeliveryException
-     * @throws MissingKindException
      * @return void
+     *@throws MissingKindException
+     * @throws MissingDeliveryException
      */
-    public function register(int $user, array $kinds, $delivery, int $options = 0);
+    public function register(int $user, array $domains, $delivery, int $options = 0);
 
     /**
      * Unregisters a user. If $kinds is NULL, unregister all.

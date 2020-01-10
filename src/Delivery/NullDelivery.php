@@ -32,58 +32,23 @@
  *
  */
 
-namespace Skyline\Notification\Kind;
+namespace Skyline\Notification\Delivery;
 
 
-use TASoft\Util\AbstractRecordPDOResource;
-
-class NotificationKind extends AbstractRecordPDOResource
+class NullDelivery implements DeliveryInterface
 {
-    const NAME_KEY = 'name';
-    const DESCRIPTION_KEY = 'description';
-    const OPTIONS_KEY = 'options';
-
-    /** @var string */
-    private $name;
-    /** @var string|null */
-    private $description;
-    /** @var int */
-    private $options;
-
-    /**
-     * NotificationKind constructor.
-     * @param $record
-     */
-    public function __construct($record)
-    {
-        parent::__construct($record);
-
-        $this->name = $record[ static::NAME_KEY ];
-        $this->description = $record[ static::DESCRIPTION_KEY ] ?? NULL;
-        $this->options = (int) $record[ static::OPTIONS_KEY ] ?? 0;
-    }
-
-    /**
-     * @return string
-     */
     public function getName(): string
     {
-        return $this->name;
+        return "/dev/null";
     }
 
-    /**
-     * @return string|null
-     */
-    public function getDescription(): ?string
+    public function canDeliverNotification(DeliverInfo $notificationInfo): bool
     {
-        return $this->description;
+        return false;
     }
 
-    /**
-     * @return int
-     */
-    public function getOptions(): int
+    public function deliverNotification(DeliverInfo $notificationInfo)
     {
-        return $this->options;
+        return false;
     }
 }

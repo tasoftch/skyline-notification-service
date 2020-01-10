@@ -32,31 +32,57 @@
  *
  */
 
-namespace Skyline\Notification\Deliver;
+namespace Skyline\Notification\Domain;
 
+use TASoft\Util\AbstractRecordPDOResource;
 
-use DateTime;
-use Skyline\Notification\NotificationServiceInterface;
-
-interface DeliverScheduledInterface extends DeliverInterface
+class Domain extends AbstractRecordPDOResource
 {
-    /**
-     * Tells the notification service, at what date it should schedule delivering the notification.
-     * Return NULL to perform the default delivery procedure.
-     * The delivery date must be in future
-     *
-     * @param DeliverInfo $info
-     * @param int $options      The delivery instance may specify options
-     * @return DateTime|null
-     */
-    public function getDeliveryDate(DeliverInfo $info, int &$options): ?DateTime;
+    const NAME_KEY = 'name';
+    const DESCRIPTION_KEY = 'description';
+    const OPTIONS_KEY = 'options';
+
+    /** @var string */
+    private $name;
+    /** @var string|null */
+    private $description;
+    /** @var int */
+    private $options;
 
     /**
-     * If the pending notifications were sent, this method gets called to deliver a notification to the client.
-     *
-     * @param DeliverInfo $info
-     * @param int $options
-     * @see NotificationServiceInterface::deliverPendentNotifications()
+     * NotificationKind constructor.
+     * @param $record
      */
-    public function deliverScheduledNotification(DeliverInfo $info, int $options);
+    public function __construct($record)
+    {
+        parent::__construct($record);
+
+        $this->name = $record[ static::NAME_KEY ];
+        $this->description = $record[ static::DESCRIPTION_KEY ] ?? NULL;
+        $this->options = (int) $record[ static::OPTIONS_KEY ] ?? 0;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    /**
+     * @return int
+     */
+    public function getOptions(): int
+    {
+        return $this->options;
+    }
 }

@@ -32,23 +32,15 @@
  *
  */
 
-namespace Skyline\Notification\Deliver;
+namespace Skyline\Notification\Delivery;
 
 
-class NullDelivery implements DeliverInterface
+use Skyline\Notification\ConflictSolver\ConflictSolverInterface;
+
+interface DeliveryResolvedInterface extends DeliveryInterface
 {
-    public function getName(): string
-    {
-        return "/dev/null";
-    }
-
-    public function canDeliverNotification(DeliverInfo $notificationInfo): bool
-    {
-        return false;
-    }
-
-    public function deliverNotification(DeliverInfo $notificationInfo)
-    {
-        return false;
-    }
+    /**
+     * @return ConflictSolverInterface
+     */
+    public function getSolver(): ConflictSolverInterface;
 }

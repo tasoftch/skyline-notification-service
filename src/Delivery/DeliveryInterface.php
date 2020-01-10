@@ -32,83 +32,31 @@
  *
  */
 
-namespace Skyline\Notification\Deliver;
+namespace Skyline\Notification\Delivery;
 
 
-use Skyline\Notification\Element\AffectedElementInterface;
-use Skyline\Notification\Kind\NotificationKind;
-
-class DeliverInfo
+interface DeliveryInterface
 {
-    /** @var string */
-    private $message;
-
-    /** @var NotificationKind */
-    private $kind;
-
-    /** @var null|AffectedElementInterface[] */
-    private $affectedElements;
-
-    /** @var int */
-    private $user;
-
-    /** @var int */
-    private $userOptions;
-
     /**
-     * DeliverInfo constructor.
-     * @param string $message
-     * @param NotificationKind $kind
-     * @param int $user
-     * @param int $userOptions
-     * @param AffectedElementInterface[]|null $affectedElements
-     */
-    public function __construct(string $message, NotificationKind $kind, int $user, int $userOptions = 0, array $affectedElements = NULL)
-    {
-        $this->message = $message;
-        $this->kind = $kind;
-        $this->affectedElements = $affectedElements;
-        $this->user = $user;
-        $this->userOptions = $userOptions;
-    }
-
-    /**
+     * This method must return a unique name to let the notification service know which instance is responsible to deliver a notification.
+     *
      * @return string
      */
-    public function getMessage(): string
-    {
-        return $this->message;
-    }
+    public function getName(): string;
 
     /**
-     * @return NotificationKind
+     * The delivery instance gets asked if it is able to deliver right now.
+     *
+     * @param DeliverInfo $notificationInfo
+     * @return bool
      */
-    public function getKind(): NotificationKind
-    {
-        return $this->kind;
-    }
+    public function canDeliverNotification(DeliverInfo $notificationInfo): bool;
 
     /**
-     * @return AffectedElementInterface[]|null
+     * Notifies the user now.
+     *
+     * @param DeliverInfo $notificationInfo
+     * @return bool
      */
-    public function getAffectedElements(): ?array
-    {
-        return $this->affectedElements;
-    }
-
-    /**
-     * @return int
-     */
-    public function getUser(): int
-    {
-        return $this->user;
-    }
-
-    /**
-     * @return int
-     */
-    public function getUserOptions(): int
-    {
-        return $this->userOptions;
-    }
+    public function deliverNotification(DeliverInfo $notificationInfo);
 }

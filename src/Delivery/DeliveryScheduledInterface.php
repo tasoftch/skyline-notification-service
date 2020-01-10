@@ -32,31 +32,31 @@
  *
  */
 
-namespace Skyline\Notification\Deliver;
+namespace Skyline\Notification\Delivery;
 
 
-interface DeliverInterface
+use DateTime;
+use Skyline\Notification\NotificationServiceInterface;
+
+interface DeliveryScheduledInterface extends DeliveryInterface
 {
     /**
-     * This method must return a unique name to let the notification service know which instance is responsible to deliver a notification.
+     * Tells the notification service, at what date it should schedule delivering the notification.
+     * Return NULL to perform the default delivery procedure.
+     * The delivery date must be in future
      *
-     * @return string
+     * @param DeliverInfo $info
+     * @param int $options      The delivery instance may specify options
+     * @return DateTime|null
      */
-    public function getName(): string;
+    public function getDeliveryDate(DeliverInfo $info, int &$options): ?DateTime;
 
     /**
-     * The delivery instance gets asked if it is able to deliver right now.
+     * If the pending notifications were sent, this method gets called to deliver a notification to the client.
      *
-     * @param DeliverInfo $notificationInfo
-     * @return bool
+     * @param DeliverInfo $info
+     * @param int $options
+     * @see NotificationServiceInterface::deliverPendentNotifications()
      */
-    public function canDeliverNotification(DeliverInfo $notificationInfo): bool;
-
-    /**
-     * Notifies the user now.
-     *
-     * @param DeliverInfo $notificationInfo
-     * @return bool
-     */
-    public function deliverNotification(DeliverInfo $notificationInfo);
+    public function deliverScheduledNotification(DeliverInfo $info, int $options);
 }

@@ -32,15 +32,49 @@
  *
  */
 
-namespace Skyline\Notification\Deliver;
+namespace Skyline\Notification\Delivery;
 
 
-use Skyline\Notification\ConflictSolver\ConflictSolverInterface;
-
-interface DeliverResolvedInterface extends DeliverInterface
+class CallbackDelivery implements DeliveryInterface
 {
+    /** @var string */
+    private $name;
+    /** @var callable */
+    private $callback;
+
     /**
-     * @return ConflictSolverInterface
+     * CallbackDelivery constructor.
+     * @param string $name
+     * @param callable $callback
      */
-    public function getSolver(): ConflictSolverInterface;
+    public function __construct(string $name, callable $callback)
+    {
+        $this->name = $name;
+        $this->callback = $callback;
+    }
+
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function canDeliverNotification(DeliverInfo $notificationInfo): bool
+    {
+        return true;
+    }
+
+    public function deliverNotification(DeliverInfo $notificationInfo)
+    {
+        return call_user_func($this->getCallback(), $notificationInfo);
+    }
+
+    /**
+     * @return callable
+     */
+    public function getCallback(): callable
+    {
+        return $this->callback;
+    }
+
 }
