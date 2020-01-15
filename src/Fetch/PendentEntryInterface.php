@@ -32,11 +32,30 @@
  *
  */
 
-namespace Skyline\Notification\Entry;
+namespace Skyline\Notification\Fetch;
 
 
-interface NotificationDeliverableEntryInterface extends NotificationEntryInterface
+use DateTime;
+use Skyline\Notification\Domain\Domain;
+use TASoft\Util\PDOResourceInterface;
+
+interface PendentEntryInterface extends PDOResourceInterface
 {
+    /**
+     * @return string
+     */
+    public function getMessage(): string;
+
+    /**
+     * @return DateTime
+     */
+    public function getUpdated(): DateTime;
+
+    /**
+     * @return Domain
+     */
+    public function getDomain(): Domain;
+
     /**
      * @return int
      */
@@ -46,4 +65,11 @@ interface NotificationDeliverableEntryInterface extends NotificationEntryInterfa
      * @return int
      */
     public function getUserOptions(): int;
+
+    /**
+     * Get the tags
+     *
+     * @return array|null
+     */
+    public function getTags(): ?array;
 }

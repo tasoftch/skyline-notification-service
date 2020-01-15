@@ -32,27 +32,45 @@
  *
  */
 
-namespace Skyline\Notification\Entry;
+namespace Skyline\Notification\Fetch;
 
 
-use DateTime;
-use Skyline\Notification\Domain\Domain;
-use TASoft\Util\PDOResourceInterface;
+use Skyline\Notification\Delivery\DeliveryInterface;
+use TASoft\Util\AbstractPDOResource;
 
-interface NotificationEntryInterface extends PDOResourceInterface
+class Registration extends AbstractPDOResource implements RegistrationInterface
 {
-    /**
-     * @return string
-     */
-    public function getMessage(): string;
+    /** @var DeliveryInterface */
+    private $delivery;
+    /** @var int|null */
+    private $options;
 
     /**
-     * @return DateTime
+     * Registration constructor.
+     * @param int $id
+     * @param DeliveryInterface $delivery
+     * @param int|null $options
      */
-    public function getUpdated(): DateTime;
+    public function __construct(int $id, DeliveryInterface $delivery, int $options = NULL)
+    {
+        parent::__construct($id);
+        $this->delivery = $delivery;
+        $this->options = $options;
+    }
 
     /**
-     * @return Domain
+     * @return DeliveryInterface
      */
-    public function getDomain(): Domain;
+    public function getDelivery(): DeliveryInterface
+    {
+        return $this->delivery;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getOptions(): ?int
+    {
+        return $this->options;
+    }
 }

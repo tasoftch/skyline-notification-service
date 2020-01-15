@@ -32,32 +32,39 @@
  *
  */
 
-namespace Skyline\Notification\Entry;
+namespace Skyline\Notification\Fetch;
+
 
 use DateTime;
 use Skyline\Notification\Domain\Domain;
 use TASoft\Util\AbstractPDOResource;
 
-class NotificationEntry extends AbstractPDOResource implements NotificationEntryInterface
+class PendentEntry extends AbstractPDOResource implements PendentEntryInterface
 {
     /** @var Domain */
-    private $domain;
+    protected $domain;
     /** @var string */
-    private $message;
+    protected $message;
     /** @var DateTime */
-    private $updated;
-    /** @var string[] */
-    private $tags;
+    protected $updated;
+    /** @var string[]|null */
+    protected $tags;
+    /** @var int */
+    protected $user;
+    /** @var int */
+    protected $userOptions;
 
     /**
-     * Entry constructor.
+     * PendentEntry constructor.
+     * @param int $id
      * @param Domain $domain
      * @param string $message
      * @param DateTime $updated
-     * @param string[] $tags
-     * @param int $id
+     * @param string[]|null $tags
+     * @param int $user
+     * @param int $userOptions
      */
-    public function __construct(Domain $domain, string $message, DateTime $updated, array $tags, int $id = -1)
+    public function __construct(int $id, Domain $domain, string $message, DateTime $updated, ?array $tags, int $user, int $userOptions)
     {
         parent::__construct($id);
 
@@ -65,6 +72,33 @@ class NotificationEntry extends AbstractPDOResource implements NotificationEntry
         $this->message = $message;
         $this->updated = $updated;
         $this->tags = $tags;
+        $this->user = $user;
+        $this->userOptions = $userOptions;
+    }
+
+
+    /**
+     * @return int
+     */
+    public function getUser(): int
+    {
+        return $this->user;
+    }
+
+    /**
+     * @return int
+     */
+    public function getUserOptions(): int
+    {
+        return $this->userOptions;
+    }
+
+    /**
+     * @return Domain
+     */
+    public function getDomain(): Domain
+    {
+        return $this->domain;
     }
 
     /**
@@ -84,10 +118,10 @@ class NotificationEntry extends AbstractPDOResource implements NotificationEntry
     }
 
     /**
-     * @return Domain
+     * @return string[]|null
      */
-    public function getDomain(): Domain
+    public function getTags(): ?array
     {
-        return $this->domain;
+        return $this->tags;
     }
 }

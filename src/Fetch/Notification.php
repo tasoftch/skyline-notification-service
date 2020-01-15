@@ -32,39 +32,16 @@
  *
  */
 
-namespace Skyline\Notification\Entry;
+namespace Skyline\Notification\Fetch;
 
 
 use DateTime;
 use Skyline\Notification\Domain\Domain;
 
-class DeliverableNotificationEntry extends NotificationEntry implements NotificationDeliverableEntryInterface
+class Notification extends PendentEntry
 {
-    /** @var int */
-    private $user;
-    /** @var int */
-    private $userOptions;
-
-    public function __construct(Domain $domain, string $message, DateTime $updated, array $tags, int $user, int $userOptions, int $id = -1)
+    public function __construct(int $user, Domain $domain, string $message, array $tags = NULL, int $userOptions = NULL, int $id = -1, DateTime $updated = NULL)
     {
-        parent::__construct($domain, $message, $updated, $tags, $id);
-        $this->userOptions = $userOptions;
-        $this->user = $user;
-    }
-
-    /**
-     * @return int
-     */
-    public function getUser(): int
-    {
-        return $this->user;
-    }
-
-    /**
-     * @return int
-     */
-    public function getUserOptions(): int
-    {
-        return $this->userOptions;
+        parent::__construct($id, $domain, $message, $updated ?: new DateTime(), $tags, $user, $userOptions);
     }
 }
