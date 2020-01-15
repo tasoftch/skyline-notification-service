@@ -34,7 +34,7 @@
 
 namespace Skyline\Notification\ConflictSolver;
 
-use Skyline\Notification\Entry\NotificationEntryInterface;
+use Skyline\Notification\Fetch\PendentEntryInterface;
 
 /**
  * Conflicts occur if an entry that needs to be delivered has other entries with common tags.
@@ -48,8 +48,8 @@ interface ConflictSolverInterface
      * This method gets called if there are entries with more than one affected elements common.
      * It must decide which Entry should be delivered to the client
      *
-     * @param NotificationEntryInterface[] $conflictingEntries
-     * @return NotificationEntryInterface
+     * @param PendentEntryInterface[] $conflictingEntries
+     * @return PendentEntryInterface
      */
-    public function getSolvedNotificationEntry(array $conflictingEntries): NotificationEntryInterface;
+    public function getSolvedNotificationEntry(array $conflictingEntries): PendentEntryInterface;
 }

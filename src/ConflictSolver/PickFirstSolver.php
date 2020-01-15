@@ -35,11 +35,11 @@
 namespace Skyline\Notification\ConflictSolver;
 
 
-use Skyline\Notification\Entry\NotificationEntryInterface;
+use Skyline\Notification\Fetch\PendentEntryInterface;
 
 class PickFirstSolver implements ConflictSolverInterface
 {
-    public function getSolvedNotificationEntry(array $conflictingEntries): NotificationEntryInterface
+    public function getSolvedNotificationEntry(array $conflictingEntries): PendentEntryInterface
     {
         return array_shift($conflictingEntries);
     }
