@@ -32,19 +32,46 @@
  *
  */
 
-use Skyline\Kernel\Config\MainKernelConfig;
-use Skyline\Notification\Service\AbstractNotificationService;
-use Skyline\Notification\Service\Container;
-use TASoft\Service\Config\AbstractFileConfiguration;
+namespace Skyline\Notification\Service;
 
-return [
-    MainKernelConfig::CONFIG_SERVICES => [
-        AbstractNotificationService::SERVICE_NAME => [
-            AbstractFileConfiguration::SERVICE_CONTAINER => Container::class,
-            AbstractFileConfiguration::SERVICE_INIT_ARGUMENTS => [
-                'pdo' => '$PDO',
-                'deliveryInstances' => []
-            ]
-        ]
-    ]
-];
+
+use TASoft\Service\Container\AbstractContainer;
+use TASoft\Util\PDO;
+
+class Container extends AbstractContainer
+{
+    /** @var PDO */
+    private $PDO;
+    private $deliveryInstances;
+
+    /**
+     * Container constructor.
+     * @param PDO $PDO
+     * @param $deliveryInstances
+     */
+    public function __construct(PDO $PDO, $deliveryInstances = NULL)
+    {
+        $this->PDO = $PDO;
+        $this->deliveryInstances = $deliveryInstances;
+    }
+
+    /**
+     * @return PDO
+     */
+    public function getPDO(): PDO
+    {
+        return $this->PDO;
+    }
+
+
+
+    protected function loadInstance()
+    {
+        switch ($this->getPDO()->getAttribute( PDO::ATTR_DRIVER_NAME )) {
+            case 'mysql':
+                return new MySQLNotificationService( $this->getPDO(), $this->deliveryInstances );
+            default:
+                return new SQLiteNotificationService( $this->getPDO(), $this->deliveryInstances );
+        }
+    }
+}
