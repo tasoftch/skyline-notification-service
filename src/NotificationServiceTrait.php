@@ -36,7 +36,7 @@ namespace Skyline\Notification;
 
 
 use Skyline\Kernel\Service\SkylineServiceManager;
-use Skyline\Notification\Kind\NotificationKindInterface;
+use Skyline\Notification\Domain\Domain;
 use TASoft\EventManager\EventManagerInterface;
 use TASoft\EventManager\SectionEventManager;
 
@@ -48,14 +48,17 @@ trait NotificationServiceTrait
 
     /**
      * @param $message
-     * @param NotificationKindInterface|string|int $kind
-     * @param array|NULL $affectedElements
+     * @param Domain|string|int $domain
+     * @param array|NULL $tags
      */
-    protected function notify($message, $kind, array $affectedElements = NULL) {
+    protected function notify($message, $domain, array $tags = NULL) {
         $em = $this->getEventManager();
 
         if($em instanceof EventManagerInterface) {
-
+            if($em instanceof SectionEventManager)
+                $em->triggerSection( SKY_NOTIFICATION_EVENT_SECTION, SKY_NOTIFICATION_EVENT_NAME, NULL, $message, $domain, $tags);
+            else
+                $em->trigger(SKY_NOTIFICATION_EVENT_NAME, NULL, $message, $domain, $tags);
         }
     }
 }
