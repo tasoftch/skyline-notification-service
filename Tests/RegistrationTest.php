@@ -89,6 +89,11 @@ class RegistrationTest extends TestCase
      * @dataProvider getNullDeliveryServiceInstances
      */
     public function testSuccessfulRegistration(AbstractNotificationService $ns) {
+        $ns->unregister(1);
+        $ns->unregister(2);
+        $ns->unregister(3);
+        $ns->unregister(4);
+
         $ns->register(
             13,
             [1, 2],
