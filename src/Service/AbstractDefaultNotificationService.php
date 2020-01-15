@@ -38,7 +38,9 @@ use DateTime;
 use Skyline\Notification\Delivery\DeliveryInterface;
 use Skyline\Notification\Domain\Domain;
 use Skyline\Notification\Exception\DuplicateRegistrationException;
+use Skyline\Notification\Fetch\Notification;
 use Skyline\Notification\Fetch\PendentEntry;
+use Skyline\Notification\Fetch\PendentEntryInterface;
 use Skyline\Notification\Fetch\Registration;
 
 /**
@@ -211,5 +213,61 @@ WHERE domain = ?", [$domain->getID()]) as $record) {
             $scheduleDate->format("Y-m-d G:i:s")
         ]);
         return true;
+    }
+
+    protected function fetchPendentEntries(&$options): ?array
+    {
+        $entries = NULL;
+
+        $now = (new DateTime())->format("Y-m-d G:i:s");
+
+        foreach($this->getPDO()->select("SELECT
+SKY_NS_ENTRY_PENDENT.id,
+       domain,
+       message,
+       updated,
+       name,
+       user,
+       SKY_NS_USER.options AS userOptions,
+       SKY_NS_ENTRY_PENDENT.options AS deliveryOptions
+FROM SKY_NS_ENTRY_PENDENT
+JOIN SKY_NS_ENTRY ON SKY_NS_ENTRY_PENDENT.entry = SKY_NS_ENTRY.id
+LEFT JOIN SKY_NS_ENTRY_TAG ON SKY_NS_ENTRY_TAG.entry = SKY_NS_ENTRY.id
+JOIN SKY_NS_USER ON user = SKY_NS_USER.id
+WHERE completed IS NULL AND '$now' >= scheduled") as $record) {
+            $id = $record["id"];
+
+            $entries[$id]["domain"] = $record["domain"];
+            $entries[$id]["message"] = $record["message"];
+            $entries[$id]["updated"] = $record["updated"];
+            $entries[$id]["tags"][] = $record["name"];
+            $entries[$id]["user"] = $record["user"];
+            $entries[$id]["uopt"] = $record["userOptions"];
+            $options[$id] = $record["deliveryOptions"];
+        }
+
+        if($entries) {
+            foreach($entries as $id => &$entry) {
+                $entry = new PendentEntry(
+                    $id,
+                    $this->getDomain( $entry["domain"] ),
+                    $entry["message"],
+                    new DateTime( $entry["updated"] ),
+                    $entry["tags"],
+                    $entry["user"],
+                    $entry["uopt"]
+                );
+            }
+        }
+
+        return $entries;
+    }
+
+    protected function completeNotification(Notification $notification)
+    {
+        $this->getPDO()->inject("UPDATE SKY_NS_ENTRY_PENDENT SET completed = ? WHERE id = ?")->send([
+            (new DateTime())->format("Y-m-d G:i:s"),
+            $notification->getID()
+        ]);
     }
 }

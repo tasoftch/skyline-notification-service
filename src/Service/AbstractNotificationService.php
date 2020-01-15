@@ -385,28 +385,30 @@ abstract class AbstractNotificationService implements NotificationServiceInterfa
                         if($delivery instanceof DeliveryScheduledInterface) {
                             $options = 0;
                             $date = $delivery->getDeliveryDate($notification, $options);
-                            $nid = $notification->getID();
-                            if($nid<1) {
-                                // Notification does not exist yet
-                                if(NULL === $notificationID)
-                                    $notificationID = $this->scheduleNotification(
-                                        $notification->getDomain(),
-                                        $message,
-                                        $notification->getUpdated(),
-                                        $notification->getTags()
-                                    );
-                                $nid = $notificationID;
+                            if($date) {
+                                $nid = $notification->getID();
+                                if($nid<1) {
+                                    // Notification does not exist yet
+                                    if(NULL === $notificationID)
+                                        $notificationID = $this->scheduleNotification(
+                                            $notification->getDomain(),
+                                            $message,
+                                            $notification->getUpdated(),
+                                            $notification->getTags()
+                                        );
+                                    $nid = $notificationID;
+                                }
+
+                                if($this->schedulePendentNotification(
+                                    $nid,
+                                    $registration->getID(),
+                                    $date,
+                                    $options
+                                ))
+                                    continue;
+
+                                trigger_error("Could not schedule notification", E_USER_NOTICE);
                             }
-
-                            if($this->schedulePendentNotification(
-                                $nid,
-                                $registration->getID(),
-                                $date,
-                                $options
-                            ))
-                                continue;
-
-                            trigger_error("Could not schedule notification", E_USER_NOTICE);
                         }
 
                         if(!$delivery->deliverNotification($notification)) {
@@ -423,8 +425,72 @@ abstract class AbstractNotificationService implements NotificationServiceInterfa
         return false;
     }
 
+    /**
+     * Fetches all pendent entries.
+     * Put the pendent entries keys for $options array and the delivery options as value.
+     *
+     * @param array $options
+     * @return PendentEntryInterface[]|null
+     */
+    abstract protected function fetchPendentEntries(&$options): ?array;
+
+    /**
+     * Called after a pendent notification was delivered successfully.
+     *
+     * @param Notification $notification
+     */
+    abstract protected function completeNotification(Notification $notification);
+
+    /**
+     * @inheritDoc
+     */
     public function deliverPendentNotifications()
     {
+        $options = [];
+        if($entries = $this->fetchPendentEntries($options)) {
+            /** @var PendentEntryInterface $entry */
+            $deliveries = [];
+            $registrations = [];
 
+            $getDelivery = function(Notification $notification) use (&$deliveries, &$registrations) {
+                $uid = $notification->getUser();
+                if(!$deliveries[$uid]) {
+                    if(! $registrations[$notification->getDomain()->getID()] ) {
+                        $registrations[$notification->getDomain()->getID()] = $this->fetchRegistrations($notification->getDomain());
+                    }
+
+                    /** @var RegistrationInterface $registration */
+                    foreach($registrations[$notification->getDomain()->getID()] as $registration) {
+                        $deliveries[ $registration->getID() ] = $registration->getDelivery();
+                    }
+                }
+
+                return $deliveries[$uid] ?? NULL;
+            };
+
+            foreach($entries as $entry) {
+                if(!($entry instanceof Notification)) {
+                    $entry = new Notification(
+                        $entry->getUser(),
+                        $entry->getDomain(),
+                        $entry->getMessage(),
+                        $entry->getTags(),
+                        $entry->getUserOptions(),
+                        $entry->getID(),
+                        $entry->getUpdated()
+                    );
+                }
+
+                $delivery = @$getDelivery($entry);
+
+                if($delivery instanceof DeliveryScheduledInterface) {
+                    if($delivery->deliverScheduledNotification($entry, $options[ $entry->getID() ] ?? 0))
+                        $this->completeNotification($entry);
+                    else
+                        trigger_error(sprintf("Could not deliver scheduled notification #%d", $entry->getID()), E_USER_WARNING);
+                } else
+                    trigger_error(sprintf("Delivery can not be found for pendent entry #%d", $entry->getID()), E_USER_WARNING);
+            }
+        }
     }
 }
