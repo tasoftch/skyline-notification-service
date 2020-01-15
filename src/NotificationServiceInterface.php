@@ -84,26 +84,27 @@ interface NotificationServiceInterface extends ServiceInterface
     /**
      * Modifies a user registration.
      *
-     * Passing NULL to domains or options does not change the property.
+     * Passing NULL to domains, delivery or options does not change the property.
      *
      * @param int $user
      * @param array|NULL $domains
+     * @param string|DeliveryInterface $delivery
      * @param int|NULL $options
      * @throws DomainNotFoundException
      */
-    public function modify(int $user, array $domains = NULL, int $options = NULL);
+    public function modify(int $user, array $domains = NULL, $delivery = NULL, int $options = NULL);
 
     /**
      * Posts a notification to the storage.
      *
      * Depending how deliver modes work they can schedule or handle the notifications.
      *
-     * @param $message
+     * @param string $message
      * @param Domain|string|int $domain
      * @param string[] $tags
      * @return bool|int     Returns to how many users the notification is delivered or false on failure
      */
-    public function postNotification($message, $domain, array $tags = []);
+    public function postNotification(string $message, $domain, array $tags = []);
 
     /**
      * Call this method to look for pendent notifications and deliver them if needed.
