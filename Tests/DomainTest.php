@@ -40,16 +40,28 @@
  */
 
 use PHPUnit\Framework\TestCase;
-use Skyline\Notification\NotificationService;
+use Skyline\Notification\NotificationServiceInterface;
+use Skyline\Notification\Service\MySQLNotificationService;
+use Skyline\Notification\Service\SQLiteNotificationService;
 
-class KindTest extends TestCase
+class DomainTest extends TestCase
 {
-    public function testKinds() {
-        global $PDO;
-        $ns = new NotificationService($PDO);
+    public function getServiceInstances() {
+        global $MySQL_PDO, $SQLite_PDO;
 
-        $kind = $ns->getKind(3);
-        $other = $ns->getKind("Page Changed");
+        return [
+            [ new SQLiteNotificationService($SQLite_PDO) ],
+            [ new MySQLNotificationService($MySQL_PDO) ]
+        ];
+    }
+
+    /**
+     * @dataProvider getServiceInstances
+     */
+    public function testKinds(NotificationServiceInterface $ns) {
+
+        $kind = $ns->getDomain(3);
+        $other = $ns->getDomain("Page Changed");
 
         $this->assertEquals(3, $kind->getID());
         $this->assertEquals("Role Changed", $kind->getName());
@@ -57,7 +69,7 @@ class KindTest extends TestCase
         $this->assertEquals(2, $other->getID());
         $this->assertEquals("Page Changed", $other->getName());
 
-        $other = $ns->getKind('Role Changed');
+        $other = $ns->getDomain('Role Changed');
 
         $this->assertSame($other, $kind);
     }
