@@ -35,8 +35,8 @@
 namespace Skyline\Notification\Delivery;
 
 
-use Skyline\Notification\Entry\NotificationDeliverableEntryInterface;
-use Skyline\Notification\Entry\NotificationEntryInterface;
+
+use Skyline\Notification\Fetch\Notification;
 
 interface DeliveryInterface
 {
@@ -50,16 +50,16 @@ interface DeliveryInterface
     /**
      * The delivery instance gets asked if it is able to deliver right now.
      *
-     * @param NotificationEntryInterface $entry
+     * @param Notification $notification
      * @return bool
      */
-    public function canDeliverNotification(NotificationEntryInterface $entry): bool;
+    public function canDeliverNotification(Notification $notification): bool;
 
     /**
      * Notifies the user now.
      *
-     * @param NotificationDeliverableEntryInterface $entry
+     * @param Notification $notification
      * @return bool
      */
-    public function deliverNotification(NotificationDeliverableEntryInterface $entry);
+    public function deliverNotification(Notification $notification);
 }

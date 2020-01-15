@@ -35,8 +35,7 @@
 namespace Skyline\Notification\Delivery;
 
 
-use Skyline\Notification\Entry\NotificationDeliverableEntryInterface;
-use Skyline\Notification\Entry\NotificationEntryInterface;
+use Skyline\Notification\Fetch\Notification;
 
 class NullDelivery implements DeliveryInterface
 {
@@ -45,12 +44,12 @@ class NullDelivery implements DeliveryInterface
         return "/dev/null";
     }
 
-    public function canDeliverNotification(NotificationEntryInterface $notificationInfo): bool
+    public function canDeliverNotification(Notification $notificationInfo): bool
     {
         return false;
     }
 
-    public function deliverNotification(NotificationDeliverableEntryInterface $notificationInfo)
+    public function deliverNotification(Notification $notificationInfo)
     {
         return false;
     }

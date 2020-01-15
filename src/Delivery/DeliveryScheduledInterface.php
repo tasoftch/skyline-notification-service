@@ -36,7 +36,7 @@ namespace Skyline\Notification\Delivery;
 
 
 use DateTime;
-use Skyline\Notification\Entry\NotificationDeliverableEntryInterface;
+use Skyline\Notification\Fetch\Notification;
 use Skyline\Notification\NotificationServiceInterface;
 
 interface DeliveryScheduledInterface extends DeliveryInterface
@@ -46,18 +46,19 @@ interface DeliveryScheduledInterface extends DeliveryInterface
      * Return NULL to perform the default delivery procedure.
      * The delivery date must be in future
      *
-     * @param NotificationDeliverableEntryInterface $entry
+     * @param Notification $notification
      * @param int $options      The delivery instance may specify options, that are passed into deliverScheduledNotification().
      * @return DateTime|null
      */
-    public function getDeliveryDate(NotificationDeliverableEntryInterface $entry, int &$options): ?DateTime;
+    public function getDeliveryDate(Notification $notification, int &$options): ?DateTime;
 
     /**
      * If the pending notifications were sent, this method gets called to deliver a notification to the client.
      *
-     * @param NotificationDeliverableEntryInterface $entry
+     * @param Notification $notification
      * @param int $options
      * @see NotificationServiceInterface::deliverPendentNotifications()
+     * @return bool     Return true on success, so the pendent notification gets completed.
      */
-    public function deliverScheduledNotification(NotificationDeliverableEntryInterface $entry, int $options);
+    public function deliverScheduledNotification(Notification $notification, int $options): bool;
 }
