@@ -40,119 +40,171 @@
  */
 
 use PHPUnit\Framework\TestCase;
-use Skyline\Notification\Deliver\NullDelivery;
-use Skyline\Notification\NotificationService;
+use Skyline\Notification\Delivery\CallbackDelivery;
+use Skyline\Notification\Delivery\NullDelivery;
+use Skyline\Notification\NotificationServiceInterface;
+use Skyline\Notification\Service\AbstractNotificationService;
+use Skyline\Notification\Service\MySQLNotificationService;
+use Skyline\Notification\Service\SQLiteNotificationService;
 
 class RegistrationTest extends TestCase
 {
-    /**
-     * @expectedException \Skyline\Notification\Exception\MissingDeliveryException
-     */
-    public function testRegistrationFailureMissingDelivery() {
-        global $PDO;
-        $ns = new NotificationService($PDO, [
-            // No delivery instance set
-        ]);
+    public function getServiceInstances() {
+        global $MySQL_PDO, $SQLite_PDO;
 
+        return [
+            [ new SQLiteNotificationService($SQLite_PDO) ],
+            [ new MySQLNotificationService($MySQL_PDO) ]
+        ];
+    }
+
+    public function getNullDeliveryServiceInstances() {
+        global $MySQL_PDO, $SQLite_PDO;
+
+        return [
+            [ new SQLiteNotificationService($SQLite_PDO, [
+                new NullDelivery()
+            ]) ],
+            [ new MySQLNotificationService($MySQL_PDO, [
+                new NullDelivery()
+            ]) ]
+        ];
+    }
+
+    /**
+     * @dataProvider getServiceInstances
+     * @expectedException \Skyline\Notification\Exception\DeliveryInstanceNotFoundException
+     * @param NotificationServiceInterface $ns
+     */
+    public function testRegistrationFailureMissingDelivery(NotificationServiceInterface $ns) {
         $ns->register(
             13,
-            [
-                $ns->getKind(1),
-                $ns->getKind(2)
-            ],
+            [1, 2],
             '/dev/null',
             35
         );
     }
 
-    public function testSuccessfulRegistration() {
-        global $PDO;
-        $ns = new NotificationService($PDO, [
-            new NullDelivery()
-        ]);
-
-        $this->assertTrue($ns->register(
+    /**
+     * @dataProvider getNullDeliveryServiceInstances
+     */
+    public function testSuccessfulRegistration(AbstractNotificationService $ns) {
+        $ns->register(
             13,
-            [
-                $ns->getKind(1),
-                $ns->getKind(2)
-            ],
+            [1, 2],
             '/dev/null',
             35
-        ));
-
-        $this->assertEquals(1, $PDO->selectFieldValue("SELECT count(user) AS C FROM SKY_NS_REGISTER", 'C'));
-        $this->assertEquals(2, $PDO->selectFieldValue("SELECT count(kind) AS C FROM SKY_NS_REGISTER_KIND", 'C'));
-
-        $this->assertTrue(
-            $ns->unregister(13, [
-                $ns->getKind(3)
-            ])
         );
 
-        $this->assertEquals(1, $PDO->selectFieldValue("SELECT count(user) AS C FROM SKY_NS_REGISTER", 'C'));
-        $this->assertEquals(2, $PDO->selectFieldValue("SELECT count(kind) AS C FROM SKY_NS_REGISTER_KIND", 'C'));
+        $this->assertEquals(1, $ns->getPDO()->selectFieldValue("SELECT count(id) AS C FROM SKY_NS_USER", 'C'));
+        $this->assertEquals(2, $ns->getPDO()->selectFieldValue("SELECT count(domain) AS C FROM SKY_NS_USER_DOMAIN", 'C'));
 
-        $this->assertTrue(
-            $ns->unregister(13, [
-                $ns->getKind(1)
-            ])
-        );
+        $ns->modify(13, [
+            $ns->getDomain(3),
+            1,
+            2
+        ]);
 
-        $this->assertEquals(1, $PDO->selectFieldValue("SELECT count(user) AS C FROM SKY_NS_REGISTER", 'C'));
-        $this->assertEquals(1, $PDO->selectFieldValue("SELECT count(kind) AS C FROM SKY_NS_REGISTER_KIND", 'C'));
+        $this->assertEquals(1, $ns->getPDO()->selectFieldValue("SELECT count(id) AS C FROM SKY_NS_USER", 'C'));
+        $this->assertEquals(3, $ns->getPDO()->selectFieldValue("SELECT count(domain) AS C FROM SKY_NS_USER_DOMAIN", 'C'));
 
-        $this->assertTrue(
-            $ns->unregister(13)
-        );
 
-        $this->assertEquals(0, $PDO->selectFieldValue("SELECT count(user) AS C FROM SKY_NS_REGISTER", 'C'));
-        $this->assertEquals(0, $PDO->selectFieldValue("SELECT count(kind) AS C FROM SKY_NS_REGISTER_KIND", 'C'));
+        $ns->modify(13, [
+            2
+        ]);
+
+        $this->assertEquals(1, $ns->getPDO()->selectFieldValue("SELECT count(id) AS C FROM SKY_NS_USER", 'C'));
+        $this->assertEquals(1, $ns->getPDO()->selectFieldValue("SELECT count(domain) AS C FROM SKY_NS_USER_DOMAIN", 'C'));
+
+        $ns->unregister(13);
+
+        $this->assertEquals(0, $ns->getPDO()->selectFieldValue("SELECT count(id) AS C FROM SKY_NS_USER", 'C'));
+        $this->assertEquals(0, $ns->getPDO()->selectFieldValue("SELECT count(domain) AS C FROM SKY_NS_USER_DOMAIN", 'C'));
+
     }
 
     /**
      * @expectedException \Skyline\Notification\Exception\DuplicateRegistrationException
+     * @dataProvider getNullDeliveryServiceInstances
      */
-    public function testRegistrationRepetition() {
-        global $PDO;
-        $ns = new NotificationService($PDO, [
-            new NullDelivery()
-        ]);
+    public function testRegistrationRepetition(AbstractNotificationService $ns) {
 
-        $this->assertTrue($ns->register(
+        $ns->register(
             13,
             [
-                $ns->getKind(1),
-                $ns->getKind(2)
+                1,
+                3
             ],
             '/dev/null',
             35
-        ));
+        );
 
-        $this->assertFalse($ns->register(
+        $ns->register(
             13,
             [
-                $ns->getKind(1),
-                $ns->getKind(3)
+                1,
+                3
             ],
             '/dev/null',
             35
-        ));
+        );
     }
 
     /**
+     * @param AbstractNotificationService $ns
+     * @dataProvider getNullDeliveryServiceInstances
      * @depends testRegistrationRepetition
      */
-    public function testUnregisterAll() {
-        global $PDO;
-        $ns = new NotificationService($PDO, [
-            new NullDelivery()
-        ]);
-
+    public function testModifyRegistration(AbstractNotificationService $ns) {
         $ns->unregister(13);
-        $this->assertEquals(0, $PDO->selectFieldValue("SELECT count(user) AS C FROM SKY_NS_REGISTER", 'C'));
-        $this->assertEquals(0, $PDO->selectFieldValue("SELECT count(kind) AS C FROM SKY_NS_REGISTER_KIND", 'C'));
+
+        $ns->register(
+            13,
+            [
+                1,
+                3
+            ],
+            '/dev/null',
+            35
+        );
+
+        $ns->addDeliveryInstance(new CallbackDelivery('/my/name', function() {}));
+
+        $records = iterator_to_array(
+            $ns->getPDO()->select("SELECT * FROM SKY_NS_USER")
+        );
+
+        $this->assertCount(1, $records);
+        $record = array_shift($records);
+
+        $this->assertEquals(13, $record["id"]);
+        $this->assertEquals('/dev/null', $record["delivery"]);
+        $this->assertEquals(35, $record["options"]);
+
+        $ns->modify(13, NULL, NULL, 45);
+
+        $records = iterator_to_array(
+            $ns->getPDO()->select("SELECT * FROM SKY_NS_USER")
+        );
+
+        $this->assertCount(1, $records);
+        $record = array_shift($records);
+
+        $this->assertEquals(13, $record["id"]);
+        $this->assertEquals('/dev/null', $record["delivery"]);
+        $this->assertEquals(45, $record["options"]);
+
+        $ns->modify(13, NULL, '/my/name', 33);
+
+        $records = iterator_to_array(
+            $ns->getPDO()->select("SELECT * FROM SKY_NS_USER")
+        );
+
+        $this->assertCount(1, $records);
+        $record = array_shift($records);
+
+        $this->assertEquals(13, $record["id"]);
+        $this->assertEquals('/my/name', $record["delivery"]);
+        $this->assertEquals(33, $record["options"]);
     }
-
-
 }
