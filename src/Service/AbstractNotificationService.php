@@ -86,6 +86,27 @@ abstract class AbstractNotificationService implements NotificationServiceInterfa
     }
 
     /**
+     * Adds delivery instance to the service
+     *
+     * @param DeliveryInterface $delivery
+     */
+    public function addDeliveryInstance(DeliveryInterface $delivery) {
+        $this->deliveryInstances[ $delivery->getName() ] = $delivery;
+    }
+
+    /**
+     * Removes a delivery instance from service
+     *
+     * @param $instance
+     */
+    public function removeDeliveryInstance($instance) {
+        if($instance instanceof DeliveryInterface)
+            $instance = $instance->getName();
+
+        unset($this->deliveryInstances[$instance]);
+    }
+
+    /**
      * @inheritDoc
      */
     public function getDeliveryInstance($name): ?DeliveryInterface
