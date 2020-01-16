@@ -51,6 +51,15 @@ use Skyline\Notification\Service\SQLiteNotificationService;
  */
 class NotificationTest extends TestCase
 {
+    public static function setUpBeforeClass()
+    {
+        parent::setUpBeforeClass();
+        global $MySQL_PDO, $SQLite_PDO;
+
+        setupPDO($MySQL_PDO);
+        setupPDO($SQLite_PDO);
+    }
+
     public function getServiceInstances() {
         global $MySQL_PDO, $SQLite_PDO;
 
@@ -76,11 +85,6 @@ class NotificationTest extends TestCase
             ];
             return true;
         }));
-
-        $service->unregister(1);
-        $service->unregister(2);
-        $service->unregister(3);
-        $service->unregister(4);
 
 
         $service->register(1, [1, 3], 'dev', 3);

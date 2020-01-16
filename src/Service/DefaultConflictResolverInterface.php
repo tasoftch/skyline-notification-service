@@ -32,54 +32,18 @@
  *
  */
 
-/**
- * KindTest.php
- * skyline-notification-service
- *
- * Created on 2020-01-09 13:07 by thomas
- */
+namespace Skyline\Notification\Service;
 
-use PHPUnit\Framework\TestCase;
+
+use Skyline\Notification\ConflictSolver\ConflictSolverInterface;
 use Skyline\Notification\NotificationServiceInterface;
-use Skyline\Notification\Service\MySQLNotificationService;
-use Skyline\Notification\Service\SQLiteNotificationService;
 
-class DomainTest extends TestCase
+interface DefaultConflictResolverInterface extends NotificationServiceInterface
 {
-    public static function setUpBeforeClass()
-    {
-        parent::setUpBeforeClass();
-        global $MySQL_PDO, $SQLite_PDO;
-
-        setupPDO($MySQL_PDO);
-        setupPDO($SQLite_PDO);
-    }
-
-    public function getServiceInstances() {
-        global $MySQL_PDO, $SQLite_PDO;
-
-        return [
-            [ new SQLiteNotificationService($SQLite_PDO) ],
-            [ new MySQLNotificationService($MySQL_PDO) ]
-        ];
-    }
-
     /**
-     * @dataProvider getServiceInstances
+     * This method gets asked to get a conflict resolver, if the delivery instance does not provide one.
+     *
+     * @return ConflictSolverInterface|null
      */
-    public function testKinds(NotificationServiceInterface $ns) {
-
-        $kind = $ns->getDomain(3);
-        $other = $ns->getDomain("Page Changed");
-
-        $this->assertEquals(3, $kind->getID());
-        $this->assertEquals("Role Changed", $kind->getName());
-
-        $this->assertEquals(2, $other->getID());
-        $this->assertEquals("Page Changed", $other->getName());
-
-        $other = $ns->getDomain('Role Changed');
-
-        $this->assertSame($other, $kind);
-    }
+    public function getResolver(): ?ConflictSolverInterface;
 }

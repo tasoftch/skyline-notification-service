@@ -49,6 +49,15 @@ use Skyline\Notification\Service\SQLiteNotificationService;
 
 class RegistrationTest extends TestCase
 {
+    public static function setUpBeforeClass()
+    {
+        parent::setUpBeforeClass();
+        global $MySQL_PDO, $SQLite_PDO;
+
+        setupPDO($MySQL_PDO);
+        setupPDO($SQLite_PDO);
+    }
+
     public function getServiceInstances() {
         global $MySQL_PDO, $SQLite_PDO;
 
@@ -89,10 +98,6 @@ class RegistrationTest extends TestCase
      * @dataProvider getNullDeliveryServiceInstances
      */
     public function testSuccessfulRegistration(AbstractNotificationService $ns) {
-        $ns->unregister(1);
-        $ns->unregister(2);
-        $ns->unregister(3);
-        $ns->unregister(4);
 
         $ns->register(
             13,

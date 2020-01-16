@@ -74,7 +74,8 @@ WHERE completed IS NULL AND NOW() >= scheduled") as $record) {
             $entries[$id]["domain"] = $record["domain"];
             $entries[$id]["message"] = $record["message"];
             $entries[$id]["updated"] = $record["updated"];
-            $entries[$id]["tags"][] = $record["name"];
+            if($record["name"])
+                $entries[$id]["tags"][] = $record["name"];
             $entries[$id]["user"] = $record["user"];
             $entries[$id]["uopt"] = $record["userOptions"];
             $options[$id] = $record["deliveryOptions"];
@@ -87,7 +88,7 @@ WHERE completed IS NULL AND NOW() >= scheduled") as $record) {
                     $this->getDomain( $entry["domain"] ),
                     $entry["message"],
                     new DateTime( $entry["updated"] ),
-                    $entry["tags"],
+                    $entry["tags"] ?? NULL,
                     $entry["user"],
                     $entry["uopt"]
                 );

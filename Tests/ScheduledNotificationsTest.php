@@ -50,6 +50,15 @@ use Skyline\Notification\Service\SQLiteNotificationService;
 
 class ScheduledNotificationsTest extends TestCase
 {
+    public static function setUpBeforeClass()
+    {
+        parent::setUpBeforeClass();
+        global $MySQL_PDO, $SQLite_PDO;
+
+        setupPDO($MySQL_PDO);
+        setupPDO($SQLite_PDO);
+    }
+
     public function getServiceInstances() {
         global $MySQL_PDO, $SQLite_PDO;
 
@@ -92,12 +101,6 @@ class ScheduledNotificationsTest extends TestCase
                 return true;
             } )
         );
-
-        $service->unregister(13);
-        $service->unregister(1);
-        $service->unregister(2);
-        $service->unregister(3);
-        $service->unregister(4);
 
 
         $service->register(1, [1], 'dev', 2);

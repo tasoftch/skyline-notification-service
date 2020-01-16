@@ -36,6 +36,7 @@ namespace Skyline\Notification\Service;
 
 
 use DateTime;
+use Skyline\Notification\ConflictSolver\ConflictSolverInterface;
 use Skyline\Notification\Delivery\DeliveryInterface;
 use Skyline\Notification\Delivery\DeliveryResolvedInterface;
 use Skyline\Notification\Delivery\DeliveryScheduledInterface;
@@ -46,11 +47,10 @@ use Skyline\Notification\Exception\DuplicateRegistrationException;
 use Skyline\Notification\Fetch\Notification;
 use Skyline\Notification\Fetch\PendentEntryInterface;
 use Skyline\Notification\Fetch\RegistrationInterface;
-use Skyline\Notification\NotificationServiceInterface;
 use TASoft\Util\PDO;
 use Throwable;
 
-abstract class AbstractNotificationService implements NotificationServiceInterface
+abstract class AbstractNotificationService implements DefaultConflictResolverInterface
 {
     const SERVICE_NAME = 'notificationService';
 
@@ -61,6 +61,8 @@ abstract class AbstractNotificationService implements NotificationServiceInterfa
 
     /** @var Domain[] */
     private $domains = [];
+    /** @var ConflictSolverInterface|null */
+    private $resolver;
 
     /**
      * NotificationService constructor.
@@ -253,6 +255,22 @@ abstract class AbstractNotificationService implements NotificationServiceInterfa
     abstract protected function clearRegistration(int $user);
 
     /**
+     * @return ConflictSolverInterface|null
+     */
+    public function getResolver(): ?ConflictSolverInterface
+    {
+        return $this->resolver;
+    }
+
+    /**
+     * @param ConflictSolverInterface|null $resolver
+     */
+    public function setResolver(?ConflictSolverInterface $resolver): void
+    {
+        $this->resolver = $resolver;
+    }
+
+    /**
      * This method must delete all affected rows from
      *  SKY_NS_ENTRY
      *  SKY_NS_ENTRY_TAG
@@ -333,6 +351,15 @@ abstract class AbstractNotificationService implements NotificationServiceInterfa
     abstract protected function schedulePendentNotification(int $notificationID, int $user, DateTime $scheduleDate, int $deliveryOptions);
 
     /**
+     * This method gets called after conflict resolving happens.
+     * By default, should removes all remaining entries.
+     *
+     * @param PendentEntryInterface $selected
+     * @param array $remaining
+     */
+    abstract protected function handleResolvedNotificationConflicts(PendentEntryInterface $selected, array $remaining);
+
+    /**
      * @inheritDoc
      */
     public function postNotification(string $message, $domain, array $tags = [])
@@ -357,13 +384,18 @@ abstract class AbstractNotificationService implements NotificationServiceInterfa
 
                     $delivery = $registration->getDelivery();
 
-                    if($tags && $delivery instanceof DeliveryResolvedInterface) {
-                        $resolver = $delivery->getSolver();
+                    if($tags && ($delivery instanceof DeliveryResolvedInterface || $this instanceof DefaultConflictResolverInterface)) {
+                        $resolver = $delivery instanceof DeliveryResolvedInterface ? $delivery->getSolver() : $this->getResolver();
 
-                        if($conflicts = $this->fetchConflictingEntries( $registration->getID(), $tags , $registration->getOptions())) {
-                            if($conflicts) {
-                                array_unshift($conflicts, $notification);
-                                $notification = $resolver->getSolvedNotificationEntry( $conflicts );
+                        if($resolver) {
+                            if($conflicts = $this->fetchConflictingEntries( $registration->getID(), $tags , $registration->getOptions())) {
+                                if($conflicts) {
+                                    $conflicts[] = $notification;
+                                    $notification = $resolver->getSolvedNotificationEntry( $conflicts );
+                                    if(($idx = array_search($notification, $conflicts)) !== false)
+                                        unset($conflicts[$idx]);
+                                    $this->handleResolvedNotificationConflicts($notification, $conflicts);
+                                }
                             }
                         }
                     }

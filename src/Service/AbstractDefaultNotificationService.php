@@ -129,9 +129,9 @@ abstract class AbstractDefaultNotificationService extends AbstractNotificationSe
 
     protected function fetchConflictingEntries(int $user, array $tags, ?int $options): ?array
     {
-        $tags = array_map(function($v) {
+        $tags = implode(",", array_map(function($v) {
             return $this->getPDO()->quote( $v );
-        }, $tags);
+        }, $tags));
 
         $entries = NULL;
 
@@ -144,7 +144,7 @@ SKY_NS_ENTRY_PENDENT.id,
 FROM SKY_NS_ENTRY
 JOIN SKY_NS_ENTRY_TAG ON SKY_NS_ENTRY_TAG.entry = SKY_NS_ENTRY.id
 JOIN SKY_NS_ENTRY_PENDENT ON SKY_NS_ENTRY_PENDENT.entry = SKY_NS_ENTRY.id
-WHERE SKY_NS_ENTRY_TAG.name IN ($tags) AND user = $user") as $record) {
+WHERE SKY_NS_ENTRY_PENDENT.completed IS NULL AND SKY_NS_ENTRY_TAG.name IN ($tags) AND user = $user") as $record) {
             $id = $record["id"];
 
             $entries[$id]["domain"] = $record["domain"];
@@ -215,6 +215,17 @@ WHERE domain = ?", [$domain->getID()]) as $record) {
         return true;
     }
 
+    protected function handleResolvedNotificationConflicts(PendentEntryInterface $selected, array $remaining)
+    {
+        $remaining = implode(",", array_map(function(PendentEntryInterface $entry) {
+            return $entry->getID();
+        }, $remaining));
+
+        $this->getPDO()->exec("DELETE FROM SKY_NS_ENTRY_PENDENT WHERE id IN ($remaining)");
+        $this->clearUnusedEntries();
+    }
+
+
     protected function fetchPendentEntries(&$options): ?array
     {
         $entries = NULL;
@@ -240,7 +251,8 @@ WHERE completed IS NULL AND '$now' >= scheduled") as $record) {
             $entries[$id]["domain"] = $record["domain"];
             $entries[$id]["message"] = $record["message"];
             $entries[$id]["updated"] = $record["updated"];
-            $entries[$id]["tags"][] = $record["name"];
+            if($record["name"])
+                $entries[$id]["tags"][] = $record["name"];
             $entries[$id]["user"] = $record["user"];
             $entries[$id]["uopt"] = $record["userOptions"];
             $options[$id] = $record["deliveryOptions"];
@@ -253,7 +265,7 @@ WHERE completed IS NULL AND '$now' >= scheduled") as $record) {
                     $this->getDomain( $entry["domain"] ),
                     $entry["message"],
                     new DateTime( $entry["updated"] ),
-                    $entry["tags"],
+                    $entry["tags"] ?? NULL,
                     $entry["user"],
                     $entry["uopt"]
                 );
