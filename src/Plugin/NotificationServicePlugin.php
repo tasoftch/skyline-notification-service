@@ -35,10 +35,15 @@
 namespace Skyline\Notification\Plugin;
 
 
+use Skyline\Notification\Service\AbstractNotificationService;
+use TASoft\Service\ServiceManager;
+
 class NotificationServicePlugin
 {
-    public function handleNotificationServiceEvent(string $eventName, $event, $eventManager, ...$arguments)
+    public function handleNotificationServiceEvent(string $eventName, $event, $eventManager, $message, $domain, $tags)
     {
-
+        /** @var AbstractNotificationService $ns */
+        $ns = ServiceManager::generalServiceManager()->get(AbstractNotificationService::SERVICE_NAME);
+        $ns->postNotification($message, $domain, $tags);
     }
 }
