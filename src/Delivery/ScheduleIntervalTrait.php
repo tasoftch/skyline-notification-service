@@ -32,57 +32,40 @@
  *
  */
 
-namespace Skyline\Notification\Domain;
+namespace Skyline\Notification\Delivery;
 
-use TASoft\Util\AbstractRecordPDOResource;
 
-class Domain extends AbstractRecordPDOResource
+use DateTime;
+use Skyline\Notification\Fetch\Notification;
+use TASoft\Util\Interval\IntervalInterface;
+use TASoft\Util\Interval\Parser\IntervalStringParser;
+
+trait ScheduleIntervalTrait
 {
-    const NAME_KEY = 'name';
-    const DESCRIPTION_KEY = 'description';
-    const OPTIONS_KEY = 'options';
-
-    /** @var string */
-    private $name;
-    /** @var string|null */
-    private $description;
-    /** @var int */
-    private $options;
-
     /**
-     * NotificationKind constructor.
-     * @param $record
+     * This method assumes, that the user options is a timestamp in seconds per day.
+     * So 0 means midnight, 3600 => 1:00AM, 36000 => 10:00AM
+     *
+     * @param Notification $notification
+     * @return IntervalInterface
      */
-    public function __construct($record)
-    {
-        parent::__construct($record);
+    public function getDailyInterval(Notification $notification): IntervalInterface {
+        $minutes = floor($notification->getUserOptions() / 60) % 60;
+        $hours = floor( $notification->getUserOptions() / 3600 ) % 24;
 
-        $this->name = $record[ static::NAME_KEY ];
-        $this->description = $record[ static::DESCRIPTION_KEY ] ?? NULL;
-        $this->options = (int) ($record[ static::OPTIONS_KEY ] ?? 0);
+        return IntervalStringParser::parse("$minutes $hours * * *");
     }
 
     /**
-     * @return string
+     * Calculates the next desired schedule date for a daily delivery based on notification user options as seconds per day.
+     *
+     * @param Notification $notification
+     * @return DateTime
+     * @throws \Exception
+     * @see ScheduleIntervalTrait::getDailyInterval()
      */
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
-
-    /**
-     * @return int
-     */
-    public function getOptions(): int
-    {
-        return $this->options;
+    public function getNextDailyDate(Notification $notification): DateTime {
+        $interval = $this->getDailyInterval( $notification );
+        return $interval->next( new DateTime() );
     }
 }

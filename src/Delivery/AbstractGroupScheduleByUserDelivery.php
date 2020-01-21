@@ -32,57 +32,22 @@
  *
  */
 
-namespace Skyline\Notification\Domain;
+namespace Skyline\Notification\Delivery;
 
-use TASoft\Util\AbstractRecordPDOResource;
 
-class Domain extends AbstractRecordPDOResource
+use Skyline\Notification\Fetch\Notification;
+
+abstract class AbstractGroupScheduleByUserDelivery implements DeliveryScheduledInterface
 {
-    const NAME_KEY = 'name';
-    const DESCRIPTION_KEY = 'description';
-    const OPTIONS_KEY = 'options';
+    /** @var Notification[][][] */
+    private $grouped;
 
-    /** @var string */
-    private $name;
-    /** @var string|null */
-    private $description;
-    /** @var int */
-    private $options;
-
-    /**
-     * NotificationKind constructor.
-     * @param $record
-     */
-    public function __construct($record)
+    public function deliverScheduledNotification(Notification $notification, int $options): bool
     {
-        parent::__construct($record);
+        $user = $notification->getUser();
+        $domain = $notification->getDomain()->getName();
 
-        $this->name = $record[ static::NAME_KEY ];
-        $this->description = $record[ static::DESCRIPTION_KEY ] ?? NULL;
-        $this->options = (int) ($record[ static::OPTIONS_KEY ] ?? 0);
-    }
-
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
-
-    /**
-     * @return int
-     */
-    public function getOptions(): int
-    {
-        return $this->options;
+        $this->grouped[$user][$domain][] = $notification;
+        return true;
     }
 }
