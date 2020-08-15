@@ -1,29 +1,28 @@
 {
   "name": "skyline/notification-service",
   "license": "BSD-3-Clause",
-  "minimum-stability": "dev",
   "authors": [
-    {
-      "name": "Thomas Abplanalp",
-      "email": "info@tasoft.ch"
-    }
+	{
+	  "name": "Thomas Abplanalp",
+	  "email": "info@tasoft.ch"
+	}
   ],
   "autoload": {
-    "psr-4": {
-      "Skyline\\Notification\\" : "src"
-    },
-    "files": [
-      "src/Constants.php"
-    ]
+	"psr-4": {
+	  "Skyline\\Notification\\" : "src"
+	},
+	"files": [
+	  "src/Constants.php"
+	]
   },
   "require" : {
-    "php": "^7.2",
-    "skyline/kernel": "dev-master",
-    "skyline/pdo": "dev-master",
-    "tasoft/interval": "dev-master",
-    "ext-pdo": "*"
+	"php": "^7.2",
+	"skyline/kernel": "^0.8",
+	"skyline/pdo": "^0.8",
+	"tasoft/interval": "^0.8",
+	"ext-pdo": "*"
   },
   "require-dev": {
-    "phpunit/phpunit": "^6"
+	"phpunit/phpunit": "^6"
   }
 }
