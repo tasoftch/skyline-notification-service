@@ -35,6 +35,7 @@
 use Skyline\Kernel\Config\MainKernelConfig;
 use Skyline\Notification\Service\AbstractNotificationService;
 use Skyline\Notification\Service\Container;
+use Skyline\Notification\Service\MySQLNotificationService;
 use TASoft\Service\Config\AbstractFileConfiguration;
 
 return [
@@ -44,7 +45,8 @@ return [
             AbstractFileConfiguration::SERVICE_INIT_ARGUMENTS => [
                 'pdo' => '$PDO',
                 'deliveryInstances' => []
-            ]
+            ],
+			AbstractFileConfiguration::CONFIG_SERVICE_TYPE_KEY => MySQLNotificationService::class
         ]
     ]
 ];
