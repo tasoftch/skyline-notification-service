@@ -47,6 +47,7 @@ use Skyline\Notification\Exception\DuplicateRegistrationException;
 use Skyline\Notification\Fetch\Notification;
 use Skyline\Notification\Fetch\PendentEntryInterface;
 use Skyline\Notification\Fetch\RegistrationInterface;
+use Skyline\Notification\PDO\PDOMap;
 use TASoft\Util\PDO;
 use Throwable;
 
@@ -64,14 +65,15 @@ abstract class AbstractNotificationService implements DefaultConflictResolverInt
     /** @var ConflictSolverInterface|null */
     private $resolver;
 
-    /**
-     * NotificationService constructor.
-     * @param PDO $PDO
-     * @param array $deliveryInstances
-     */
-    public function __construct(PDO $PDO, array $deliveryInstances = [])
+	/**
+	 * NotificationService constructor.
+	 * @param PDO $PDO
+	 * @param array $deliveryInstances
+	 * @param array $tableMap
+	 */
+    public function __construct(PDO $PDO, array $deliveryInstances = [], $tableMap = [])
     {
-        $this->PDO = $PDO;
+        $this->PDO = new PDOMap( $PDO , $tableMap);
         foreach ($deliveryInstances as $instance) {
             if($instance instanceof DeliveryInterface) {
                 $this->deliveryInstances[ $instance->getName() ] = $instance;
@@ -82,7 +84,7 @@ abstract class AbstractNotificationService implements DefaultConflictResolverInt
     /**
      * @return PDO
      */
-    public function getPDO(): PDO
+    public function getPDO(): PDOMap
     {
         return $this->PDO;
     }

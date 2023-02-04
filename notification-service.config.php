@@ -44,7 +44,15 @@ return [
             AbstractFileConfiguration::SERVICE_CONTAINER => Container::class,
             AbstractFileConfiguration::SERVICE_INIT_ARGUMENTS => [
                 'pdo' => '$PDO',
-                'deliveryInstances' => []
+                'deliveryInstances' => [],
+				"table-map" => [
+					'SKY_NS_DOMAIN' => "SKY_NS_DOMAIN",
+					"SKY_NS_ENTRY" => "SKY_NS_ENTRY",
+					"SKY_NS_ENTRY_PENDENT" => "SKY_NS_ENTRY_PENDENT",
+					"SKY_NS_ENTRY_TAG" => "SKY_NS_ENTRY_TAG",
+					"SKY_NS_USER" => "SKY_NS_USER",
+					"SKY_NS_USER_DOMAIN" => "SKY_NS_USER_DOMAIN"
+				]
             ],
 			AbstractFileConfiguration::CONFIG_SERVICE_TYPE_KEY => MySQLNotificationService::class
         ]
