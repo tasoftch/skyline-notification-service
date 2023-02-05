@@ -37,6 +37,7 @@ namespace Skyline\Notification\Service;
 
 use DateTime;
 use Skyline\Notification\ConflictSolver\ConflictSolverInterface;
+use Skyline\Notification\Delivery\DeliveryGroupedInterface;
 use Skyline\Notification\Delivery\DeliveryInterface;
 use Skyline\Notification\Delivery\DeliveryResolvedInterface;
 use Skyline\Notification\Delivery\DeliveryScheduledInterface;
@@ -59,6 +60,7 @@ abstract class AbstractNotificationService implements DefaultConflictResolverInt
     private $PDO;
     /** @var DeliveryInterface[] */
     private $deliveryInstances = [];
+	private $groupedDeliveryInstances = [];
 
     /** @var Domain[] */
     private $domains = [];
@@ -76,7 +78,7 @@ abstract class AbstractNotificationService implements DefaultConflictResolverInt
         $this->PDO = new PDOMap( $PDO , $tableMap);
         foreach ($deliveryInstances as $instance) {
             if($instance instanceof DeliveryInterface) {
-                $this->deliveryInstances[ $instance->getName() ] = $instance;
+                $this->addDeliveryInstance($instance);
             }
         }
     }
@@ -96,6 +98,9 @@ abstract class AbstractNotificationService implements DefaultConflictResolverInt
      */
     public function addDeliveryInstance(DeliveryInterface $delivery) {
         $this->deliveryInstances[ $delivery->getName() ] = $delivery;
+
+		if($delivery instanceof DeliveryGroupedInterface)
+			$this->groupedDeliveryInstances[ $delivery->getName() ] = $delivery;
     }
 
     /**
@@ -108,6 +113,7 @@ abstract class AbstractNotificationService implements DefaultConflictResolverInt
             $instance = $instance->getName();
 
         unset($this->deliveryInstances[$instance]);
+		unset($this->groupedDeliveryInstances[$instance]);
     }
 
     /**
@@ -372,6 +378,11 @@ abstract class AbstractNotificationService implements DefaultConflictResolverInt
             if($registrations = $this->fetchRegistrations($domain)) {
                 /** @var RegistrationInterface $registration */
 
+				if($this->groupedDeliveryInstances)
+					array_walk($this->groupedDeliveryInstances, function (DeliveryGroupedInterface $grouped) {
+						$grouped->deliveryBegin();
+					});
+
                 $deliveryCount = 0;
                 $notificationID = NULL;
 
@@ -385,6 +396,7 @@ abstract class AbstractNotificationService implements DefaultConflictResolverInt
                     );
 
                     $delivery = $registration->getDelivery();
+					$schedule = true;
 
                     if($tags && ($delivery instanceof DeliveryResolvedInterface || $this instanceof DefaultConflictResolverInterface)) {
                         $resolver = $delivery instanceof DeliveryResolvedInterface ? $delivery->getSolver() : $this->getResolver();
@@ -397,6 +409,7 @@ abstract class AbstractNotificationService implements DefaultConflictResolverInt
                                     if(($idx = array_search($notification, $conflicts)) !== false)
                                         unset($conflicts[$idx]);
                                     $this->handleResolvedNotificationConflicts($notification, $conflicts);
+									$schedule = false;
                                 }
                             }
                         }
@@ -431,26 +444,31 @@ abstract class AbstractNotificationService implements DefaultConflictResolverInt
                                             $notification->getTags()
                                         );
                                     $nid = $notificationID;
+									$schedule = true;
                                 }
 
-                                if($this->schedulePendentNotification(
-                                    $nid,
-                                    $registration->getID(),
-                                    $date,
-                                    $options
-                                ))
-                                    continue;
-
-                                trigger_error("Could not schedule notification", E_USER_NOTICE);
+								if($schedule) {
+									if($this->schedulePendentNotification(
+										$nid,
+										$registration->getID(),
+										$date,
+										$options
+									))
+										continue;
+									trigger_error("Could not schedule notification", E_USER_NOTICE);
+								}
                             }
-                        }
-
-                        if(!$delivery->deliverNotification($notification)) {
+                        } elseif(!$delivery->deliverNotification($notification)) {
                             trigger_error(sprintf("Could not deliver notification for user %d on domain %s using %s", $registration->getID(), $domain->getName(), $delivery->getName()), E_USER_WARNING);
                         }
                     } else
                         trigger_error(sprintf("Delivery instance %s does not accept notification on domain %s", $delivery->getName(), $domain->getName()), E_USER_WARNING);
                 }
+
+				if($this->groupedDeliveryInstances)
+					array_walk($this->groupedDeliveryInstances, function (DeliveryGroupedInterface $grouped) {
+						$grouped->deliveryEnd();
+					});
 
                 return $deliveryCount;
             }
@@ -482,6 +500,12 @@ abstract class AbstractNotificationService implements DefaultConflictResolverInt
     {
         $options = [];
         if($entries = $this->fetchPendentEntries($options)) {
+
+			if($this->groupedDeliveryInstances)
+				array_walk($this->groupedDeliveryInstances, function (DeliveryGroupedInterface $grouped) {
+					$grouped->deliveryBegin();
+				});
+
             /** @var PendentEntryInterface $entry */
             $deliveries = [];
             $registrations = [];
@@ -519,12 +543,17 @@ abstract class AbstractNotificationService implements DefaultConflictResolverInt
 
                 if($delivery instanceof DeliveryScheduledInterface) {
                     if($delivery->deliverScheduledNotification($entry, $options[ $entry->getID() ] ?? 0))
-                        $this->completeNotification($entry);
+                       $this->completeNotification($entry);
                     else
                         trigger_error(sprintf("Could not deliver scheduled notification #%d", $entry->getID()), E_USER_WARNING);
                 } else
                     trigger_error(sprintf("Delivery can not be found for pendent entry #%d", $entry->getID()), E_USER_WARNING);
             }
+
+			if($this->groupedDeliveryInstances)
+				array_walk($this->groupedDeliveryInstances, function (DeliveryGroupedInterface $grouped) {
+					$grouped->deliveryEnd();
+				});
         }
     }
 }

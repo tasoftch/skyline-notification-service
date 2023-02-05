@@ -35,24 +35,42 @@
 namespace Skyline\Notification\Service;
 
 
+use Skyline\Notification\ConflictSolver\PickFirstSolver;
+use Skyline\Notification\ConflictSolver\PickPostedSolver;
 use TASoft\Service\Container\AbstractContainer;
 use TASoft\Util\PDO;
 
 class Container extends AbstractContainer
 {
-    /** @var PDO */
-    private $PDO;
-    private $deliveryInstances;
+	const RESOLVER_DISABLED = '';
+	const RESOLVER_PICK_EARLIEST = 'PickEarliestSolver';
+	const RESOLVER_PICK_FIRST = 'PickFirstSolver';
+	const RESOLVER_PICK_LAST = 'PickLastSolver';
+	const RESOLVER_PICK_LATEST = 'PickLatestSolver';
+	const RESOLVER_PICK_POSTED = 'PickPostedSolver';
 
-    /**
-     * Container constructor.
-     * @param PDO $PDO
-     * @param $deliveryInstances
-     */
-    public function __construct(PDO $PDO, $deliveryInstances = NULL)
+
+	/** @var PDO */
+    private $PDO;
+    private $deliveryInstances = [];
+	private $tableMap;
+
+	/** @var  */
+	private $resolver;
+
+	/**
+	 * Container constructor.
+	 * @param PDO $PDO
+	 * @param array $deliveryInstances
+	 * @param null $tableMap
+	 * @param string $resolver
+	 */
+    public function __construct(PDO $PDO, array $deliveryInstances = [], $tableMap = NULL, string $resolver = self::RESOLVER_DISABLED)
     {
         $this->PDO = $PDO;
         $this->deliveryInstances = $deliveryInstances;
+		$this->tableMap = $tableMap;
+		$this->resolver = $resolver;
     }
 
     /**
@@ -67,11 +85,20 @@ class Container extends AbstractContainer
 
     protected function loadInstance()
     {
+		$service = null;
         switch ($this->getPDO()->getAttribute( PDO::ATTR_DRIVER_NAME )) {
             case 'mysql':
-                return new MySQLNotificationService( $this->getPDO(), $this->deliveryInstances );
+                $service = new MySQLNotificationService( $this->getPDO(), $this->deliveryInstances, $this->tableMap ?: [] );
+				break;
             default:
-                return new SQLiteNotificationService( $this->getPDO(), $this->deliveryInstances );
+                $service = new SQLiteNotificationService( $this->getPDO(), $this->deliveryInstances, $this->tableMap ?: [] );
         }
+
+		if($this->resolver) {
+			$class = "\Skyline\Notification\ConflictSolver\\$this->resolver";
+			$service->setResolver(new $class);
+		}
+
+		return $service;
     }
 }

@@ -52,7 +52,8 @@ return [
 					"SKY_NS_ENTRY_TAG" => "SKY_NS_ENTRY_TAG",
 					"SKY_NS_USER" => "SKY_NS_USER",
 					"SKY_NS_USER_DOMAIN" => "SKY_NS_USER_DOMAIN"
-				]
+				],
+				"resolver" => Container::RESOLVER_DISABLED
             ],
 			AbstractFileConfiguration::CONFIG_SERVICE_TYPE_KEY => MySQLNotificationService::class
         ]

@@ -18,7 +18,9 @@ class PDOMap
 	}
 
 	public function prepareSQL($sql) {
-		return str_replace(array_keys($this->tableMap), array_values($this->tableMap), $sql);
+		return preg_replace_callback("/SKY_NS_[a-z0-9_]+/i", function($ms) {
+			return $this->tableMap[ $ms[0] ] ?: $ms[0];
+		}, $sql);
 	}
 
 	public function exec($sql) {
@@ -37,5 +39,15 @@ class PDOMap
 		return $this->PDO->lastInsertId( $this->tableMap[$table] ?? $table );
 	}
 
+	public function selectOne($sql, $arguments = []) {
+		return $this->PDO->selectOne($this->prepareSQL( $sql ), $arguments);
+	}
 
+	public function transaction(callable $callbackToPerformTransaction, bool $propagateException = true, bool $bindToPDO = false): bool {
+		return $this->PDO->transaction($callbackToPerformTransaction, $propagateException, $bindToPDO);
+	}
+
+	public function quote($string, $type = PDO::PARAM_STR) {
+		return $this->PDO->quote($string, $type);
+	}
 }

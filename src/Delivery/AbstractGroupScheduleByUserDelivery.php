@@ -37,10 +37,12 @@ namespace Skyline\Notification\Delivery;
 
 use Skyline\Notification\Fetch\Notification;
 
-abstract class AbstractGroupScheduleByUserDelivery implements DeliveryScheduledInterface
+abstract class AbstractGroupScheduleByUserDelivery implements DeliveryScheduledInterface, DeliveryGroupedInterface
 {
     /** @var Notification[][][] */
-    private $grouped;
+    private $grouped = [];
+
+	abstract protected function deliverGroupedNotifications(array $notifications);
 
     public function deliverScheduledNotification(Notification $notification, int $options): bool
     {
@@ -50,4 +52,19 @@ abstract class AbstractGroupScheduleByUserDelivery implements DeliveryScheduledI
         $this->grouped[$user][$domain][] = $notification;
         return true;
     }
+
+	public function deliverNotification(Notification $notification)
+	{
+	}
+
+
+	public function deliveryBegin()
+	{
+	}
+
+	public function deliveryEnd()
+	{
+		if($this->grouped)
+			$this->deliverGroupedNotifications($this->grouped);
+	}
 }
