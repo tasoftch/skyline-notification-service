@@ -10,10 +10,7 @@
   "autoload": {
 	"psr-4": {
 	  "Skyline\\Notification\\" : "src"
-	},
-	"files": [
-	  "src/Constants.php"
-	]
+	}
   },
   "require" : {
 	"php": ">=7.2",
