@@ -39,6 +39,7 @@ use Skyline\Notification\Delivery\DeliveryInterface;
 use Skyline\Notification\Exception\DeliveryInstanceNotFoundException;
 use Skyline\Notification\Exception\DomainNotFoundException;
 use Skyline\Notification\Domain\Domain;
+use Skyline\Notification\Fetch\Notification;
 use TASoft\Service\ServiceInterface;
 
 interface NotificationServiceInterface extends ServiceInterface
@@ -51,12 +52,12 @@ interface NotificationServiceInterface extends ServiceInterface
      */
     public function getDomain($nameOrID): ?Domain;
 
-    /**
-     * Gets the designated delivery instance for a name.
-     *
-     * @param $name
-     * @return DeliveryInterface|null
-     */
+	/**
+	 * Gets the designated delivery instance for a name.
+	 *
+	 * @param string $name
+	 * @return DeliveryInterface|null
+	 */
     public function getDeliveryInstance(string $name): ?DeliveryInterface;
 
     /**
@@ -64,11 +65,13 @@ interface NotificationServiceInterface extends ServiceInterface
      *
      * @param int $user
      * @param Domain[]|string[]|int[] $domains
-     * @param DeliveryInterface|string $delivery
-     * @param int $options
+     * @param string $delivery Name of delivery instance passed on service creation.
+     * @param int $options User options are directly passed to notification.
      * @return void
      * @throws DomainNotFoundException
      * @throws DeliveryInstanceNotFoundException
+	 * @see DeliveryInterface::getName()
+	 * @see Notification::getUserOptions()
      */
     public function register(int $user, array $domains, $delivery, int $options = 0);
 

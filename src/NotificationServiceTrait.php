@@ -34,31 +34,21 @@
 
 namespace Skyline\Notification;
 
-
-use Skyline\Kernel\Service\SkylineServiceManager;
 use Skyline\Notification\Domain\Domain;
-use TASoft\EventManager\EventManagerInterface;
-use TASoft\EventManager\SectionEventManager;
+use Skyline\Notification\Service\AbstractNotificationService;
+use TASoft\Service\ServiceManager;
 
 trait NotificationServiceTrait
 {
-    protected function getEventManager(): EventManagerInterface {
-        return SkylineServiceManager::getEventManager();
-    }
-
     /**
      * @param $message
      * @param Domain|string|int $domain
-     * @param array|NULL $tags
+     * @param array|string[]|NULL $tags
      */
     protected function notify($message, $domain, array $tags = NULL) {
-        $em = $this->getEventManager();
-
-        if($em instanceof EventManagerInterface) {
-            if($em instanceof SectionEventManager)
-                $em->triggerSection( SKY_NOTIFICATION_EVENT_SECTION, SKY_NOTIFICATION_EVENT_NAME, NULL, $message, $domain, $tags);
-            else
-                $em->trigger(SKY_NOTIFICATION_EVENT_NAME, NULL, $message, $domain, $tags);
-        }
+		/** @var AbstractNotificationService $ns */
+		$ns = ServiceManager::generalServiceManager()->get(AbstractNotificationService::SERVICE_NAME);
+		if($ns)
+			$ns->postNotification($message, $domain, $tags);
     }
 }
